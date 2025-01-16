@@ -6,6 +6,7 @@ def initial():
     tf.random.set_seed(0)
 
 
+
 class PINNs:
     def __init__(self, n_neurons, n_layers, alpha, u, f):
         self.n_neurons = n_neurons
@@ -73,8 +74,18 @@ class PINNs:
 
 
 def main(ini, boun):
+    initial()
     n_neurons = 10
     n_layers = 10
     initial_conditions, boundary_conditions = ini, boun # [x, t, u]
 
+def def_ini_boun(n_ini, n_boun):
+    x_ini = np.random.uniform(size = (n_ini, 1))
+    t_ini = np.zeros((n_ini,1))
+    x_boun = np.random.choice([0, 1], (n_boun,1))
+    t_boun = np.random.uniform(size = (n_boun,1))
 
+    return (np.hstack((x_ini, t_ini)), np.hstack((x_boun, t_boun)))
+
+
+print(def_ini_boun(10, 10))
