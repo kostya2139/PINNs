@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+from pyDOE import lhs
 
 def initial():
     np.random.seed(0)
@@ -84,8 +85,12 @@ def def_ini_boun(n_ini, n_boun):
     t_ini = np.zeros((n_ini,1))
     x_boun = np.random.choice([0, 1], (n_boun,1))
     t_boun = np.random.uniform(size = (n_boun,1))
+    u_boun = np.zeros((n_ini, 1))
+    u_ini = np.sin(2* np.pi * x_ini)
 
-    return (np.hstack((x_ini, t_ini)), np.hstack((x_boun, t_boun)))
+
+    return (np.hstack((x_ini, t_ini, u_ini)), np.hstack((x_boun, t_boun, u_boun)))
 
 
-print(def_ini_boun(10, 10))
+print(np.vstack((def_ini_boun(10, 10)[0], def_ini_boun(10, 10)[1])))
+model = PINNs(10, 10, 0.5, np.vstack((def_ini_boun(10, 10)[0], def_ini_boun(10, 10)[1])), lhs(2, 10))
