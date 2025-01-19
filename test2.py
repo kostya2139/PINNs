@@ -7,7 +7,7 @@ np.random.seed(42)
 tf.random.set_seed(42)
 
 # Problem parameters
-alpha = tf.constant(0.01, dtype=tf.float32)  # Thermal diffusivity
+alpha = tf.constant(1, dtype=tf.float32)  # Thermal diffusivity
 
 # Neural network architecture
 def create_model():
@@ -24,7 +24,7 @@ def create_model():
 model = create_model()
 
 # Compute derivatives using TensorFlow's GradientTape
-def pde_loss(x, t, u_pred):
+def pde_loss(x, t):
     with tf.GradientTape(persistent=True) as tape:
         tape.watch([x, t])
         u = model(tf.concat([x, t], axis=1))
@@ -43,9 +43,9 @@ def ic_loss(x_ic, t_ic, u_ic):
     u_pred = model(tf.concat([x_ic, t_ic], axis=1))
     return tf.reduce_mean(tf.square(u_pred - u_ic))
 
-def bc_loss(x_bc, t_bc):
+def bc_loss(x_bc, t_bc, u_bc):
     u_pred = model(tf.concat([x_bc, t_bc], axis=1))
-    return tf.reduce_mean(tf.square(u_pred))
+    return tf.reduce_mean(tf.square(u_pred - u_bc))
 
 # Generate training data
 N_collocation = 10000  # Collocation points for the PDE
@@ -65,6 +65,7 @@ u_ic = np.sin(np.pi * x_ic).astype(np.float32)
 t_bc = np.random.uniform(0, 1, (N_bc, 1)).astype(np.float32)
 x_bc_0 = np.zeros((N_bc, 1), dtype=np.float32)
 x_bc_1 = np.ones((N_bc, 1), dtype=np.float32)
+u_bc = np.zeros((N_bc, 1), dtype=np.float32)
 
 # Training the PINN
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
@@ -74,11 +75,11 @@ def train_step(x_collocation, t_collocation, x_ic, t_ic, u_ic, x_bc_0, x_bc_1, t
     with tf.GradientTape() as tape:
         # Compute losses
         u_pred_collocation = model(tf.concat([x_collocation, t_collocation], axis=1))
-        loss_pde = pde_loss(x_collocation, t_collocation, u_pred_collocation)
+        loss_pde = pde_loss(x_collocation, t_collocation)
 
         loss_ic = ic_loss(x_ic, t_ic, u_ic)
-        loss_bc_0 = bc_loss(x_bc_0, t_bc)
-        loss_bc_1 = bc_loss(x_bc_1, t_bc)
+        loss_bc_0 = bc_loss(x_bc_0, t_bc, u_bc)
+        loss_bc_1 = bc_loss(x_bc_1, t_bc, u_bc)
 
         # Total loss
         total_loss = loss_pde + loss_ic + loss_bc_0 + loss_bc_1
