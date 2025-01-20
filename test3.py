@@ -63,7 +63,10 @@ t_collocation = np.random.uniform(0, 1, (N_collocation, 1)).astype(np.float32)
 x_ic = np.random.uniform(0, 1, (N_ic, 1)).astype(np.float32)
 y_ic = np.random.uniform(0, 1, (N_ic, 1)).astype(np.float32)
 t_ic = np.zeros((N_ic, 1), dtype=np.float32)
-u_ic = (2*np.sin(3*np.pi * x_ic)*np.sin(2*np.pi * y_ic)).astype(np.float32)
+a = 2
+k_x = 3
+k_y = 2
+u_ic = (a*np.sin(k_x*np.pi * x_ic)*np.sin(k_y*np.pi * y_ic)).astype(np.float32)
 
 # Boundary conditions: u(0, t) = 0, u(1, t) = 0
 t_bc = np.random.uniform(0, 1, (N_bc, 1)).astype(np.float32)
@@ -98,9 +101,12 @@ def train_step(x_collocation, y_collocation, t_collocation, x_ic, t_ic, u_ic, x_
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
     return total_loss
 
-x_test = np.linspace(0, 1, 40).reshape(-1, 1).astype(np.float32)
-y_test = np.linspace(0, 1, 40).reshape(-1, 1).astype(np.float32)
-t_test = np.linspace(0, 1, 100).reshape(-1, 1).astype(np.float32)
+n_x_t = 40
+n_y_t = 40
+n_t_t = 100
+x_test = np.linspace(0, 1, n_x_t).reshape(-1, 1).astype(np.float32)
+y_test = np.linspace(0, 1, n_y_t).reshape(-1, 1).astype(np.float32)
+t_test = np.linspace(0, 1, n_t_t).reshape(-1, 1).astype(np.float32)
 
 X, Y, T = np.meshgrid(x_test, y_test, t_test)
 X_flat = X.flatten().reshape(-1, 1).astype(np.float32)
@@ -108,22 +114,23 @@ Y_flat = Y.flatten().reshape(-1, 1).astype(np.float32)
 T_flat = T.flatten().reshape(-1, 1).astype(np.float32)
 
 # Training loop
-epochs = 2000
+epochs = 1000
 for epoch in range(epochs):
     loss = train_step(x_collocation, y_collocation, t_collocation, x_ic, t_ic, u_ic, x_bc_0, y_bc_0, x_bc_1, y_bc_1, x_bc_2, y_bc_2, x_bc_3, y_bc_3, t_bc)
 
     if epoch % 100 == 0:
         print(f"Epoch {epoch}, Loss: {loss.numpy():.4e} ")
     if epoch % 500 == 0:
-        print(f"and secondloss {np.linalg.norm(model.predict(np.hstack((X_flat, Y_flat, T_flat))) - 2*np.sin(3*np.pi * X_flat)*np.sin(2*np.pi * Y_flat)*np.exp(-13*np.pi**2 * alpha *T_flat))}")
+        print(f"and secondloss {np.linalg.norm(model.predict(np.hstack((X_flat, Y_flat, T_flat))) - a*np.sin(k_x*np.pi * x_ic)*np.sin(k_y*np.pi * y_ic)*np.exp(-(k_x**2 + k_y**2)*np.pi**2 * alpha *T_flat))}")
 # Visualize the results
 
 
 u_pred = model.predict(np.hstack((X_flat, Y_flat, T_flat)))
-U_pred = u_pred.reshape(40, 40, 100)
+U_pred = u_pred.reshape(n_x_t, n_y_t, n_t_t)
 
 
-print(np.linalg.norm(u_pred - 2*np.sin(3*np.pi * X_flat)*np.sin(2*np.pi * Y_flat)*np.exp(-13*np.pi**2 * alpha *T_flat)))
+print(np.linalg.norm(u_pred - a*np.sin(k_x*np.pi * x_ic)*np.sin(k_y*np.pi * y_ic)*np.exp(-(k_x**2 + k_y**2)*np.pi**2 * alpha *T_flat)) + \
+np.linalg.norm(a*np.sin(k_x*np.pi * x_ic)*np.sin(k_y*np.pi * y_ic)*np.exp(-(k_x**2 + k_y**2)*np.pi**2 * alpha *T_flat)))
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.plot_surface(X[:,:,0], Y[:,:,0], U_pred[:,:,0], cmap="viridis", edgecolor="none")
