@@ -3,7 +3,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 # Constant
-alpha = 0.1  
+alpha = 0.2  
 
 # Neural network 
 def create_model():
@@ -48,28 +48,28 @@ N_collocation = 10000
 N_ic = 100 
 N_bc = 100  
 
-# Collocation points
+
 x_collocation = np.random.uniform(0, 1, (N_collocation, 1)).astype(np.float32)
 t_collocation = np.random.uniform(0, 1, (N_collocation, 1)).astype(np.float32)
 
-# Initial condition 
+# Initial and boundary condition 
 x_ic = np.random.uniform(0, 1, (N_ic, 1)).astype(np.float32)
 t_ic = np.zeros((N_ic, 1), dtype=np.float32)
 u_ic = np.sin(np.pi * x_ic).astype(np.float32)
 
-# Boundary conditions
+
 t_bc = np.random.uniform(0, 1, (N_bc, 1)).astype(np.float32)
 x_bc_0 = np.zeros((N_bc, 1), dtype=np.float32)
 x_bc_1 = np.ones((N_bc, 1), dtype=np.float32)
 u_bc = np.zeros((N_bc, 1), dtype=np.float32)
 
-# Training
+# Adam
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
 @tf.function
 def train_step(x_collocation, t_collocation, x_ic, t_ic, u_ic, x_bc_0, x_bc_1, t_bc):
     with tf.GradientTape() as tape:
-        # Compute losses
+        
         u_pred_collocation = model(tf.concat([x_collocation, t_collocation], axis=1))
         loss_pde = pde_loss(x_collocation, t_collocation)
 
@@ -111,6 +111,27 @@ plt.colorbar(label="u(x, t)")
 plt.xlabel("x")
 plt.ylabel("t")
 plt.title("Solution of the Heat Equation via PINN")
+plt.show()
+
+
+# Generate predictions for the grid points (X_flat, T_flat)
+u_pred = model.predict(np.hstack((X_flat, T_flat)))
+U_pred = u_pred.reshape(100, 100)
+
+# Create a 3D surface plot
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
+
+# Plot the surface
+ax.plot_surface(X, T, U_pred, cmap="viridis", edgecolor='none')
+
+# Add labels and title
+ax.set_xlabel("x")
+ax.set_ylabel("t")
+ax.set_zlabel("u(x, t)")
+ax.set_title("Solution of the Heat Equation via PINN")
+
+# Show the plot
 plt.show()
 
 print(np.linalg.norm(u_pred - np.sin(np.pi*X_flat)*np.exp(-T_flat)))
