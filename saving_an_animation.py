@@ -155,8 +155,6 @@ for i in range(n_t_t):
     plt.savefig(f"frames/frame_{i:03d}.png")  # Save as frame_000.png, frame_001.png, etc.
 
 from PIL import Image
-import os
-
 # Directory containing the frames
 frames_dir = "frames"
 

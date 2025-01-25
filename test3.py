@@ -64,7 +64,7 @@ x_ic = np.random.uniform(0, 1, (N_ic, 1)).astype(np.float32)
 y_ic = np.random.uniform(0, 1, (N_ic, 1)).astype(np.float32)
 t_ic = np.zeros((N_ic, 1), dtype=np.float32)
 a = 2
-k_x = 2
+k_x = 3
 k_y = 2
 u_ic = (a*np.sin(k_x*np.pi * x_ic)*np.sin(k_y*np.pi * y_ic)).astype(np.float32)
 
