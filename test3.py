@@ -120,9 +120,8 @@ for epoch in range(epochs):
 
     if epoch % 100 == 0:
         print(f"Epoch {epoch}, Loss: {loss.numpy():.4e} ")
-    if epoch % 1000 == 0:
-        pass
-        #print(f"and secondloss {np.linalg.norm((model.predict(np.hstack((X_flat, Y_flat, T_flat))) - a*np.sin(k_x*np.pi * X_flat)*np.sin(k_y*np.pi * Y_flat)*np.exp(-(k_x**2 + k_y**2)*np.pi**2 * alpha *T_flat)).reshape(-1))}")
+    if epoch % 500 == 0:
+        print(f"and secondloss {np.linalg.norm((model.predict(np.hstack((X_flat, Y_flat, T_flat))) - a*np.sin(k_x*np.pi * X_flat)*np.sin(k_y*np.pi * Y_flat)*np.exp(-(k_x**2 + k_y**2)*np.pi**2 * alpha *T_flat)).reshape(-1))}")
 # Visualize the results
 
 
