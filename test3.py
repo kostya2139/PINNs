@@ -8,7 +8,6 @@ np.random.seed(42)
 tf.random.set_seed(42)
 
 # Problem parameters
-alpha = tf.constant(0.1, dtype=tf.float32)  # Thermal diffusivity
 
 # Neural network architecture
 def create_model():
@@ -64,7 +63,6 @@ x_ic = np.random.uniform(0, 1, (N_ic, 1)).astype(np.float32)
 y_ic = np.random.uniform(0, 1, (N_ic, 1)).astype(np.float32)
 t_ic = np.zeros((N_ic, 1), dtype=np.float32)
 a = 2
-k_x = 3
 k_y = 2
 u_ic = (a*np.sin(k_x*np.pi * x_ic)*np.sin(k_y*np.pi * y_ic)).astype(np.float32)
 
@@ -114,7 +112,6 @@ Y_flat = Y.flatten().reshape(-1, 1).astype(np.float32)
 T_flat = T.flatten().reshape(-1, 1).astype(np.float32)
 
 # Training loop
-epochs = 1000
 for epoch in range(epochs):
     loss = train_step(x_collocation, y_collocation, t_collocation, x_ic, t_ic, u_ic, x_bc_0, y_bc_0, x_bc_1, y_bc_1, x_bc_2, y_bc_2, x_bc_3, y_bc_3, t_bc)
 
@@ -122,6 +119,9 @@ for epoch in range(epochs):
         print(f"Epoch {epoch}, Loss: {loss.numpy():.4e} ")
     if epoch % 500 == 0:
         print(f"and secondloss {np.linalg.norm(model.predict(np.hstack((X_flat, Y_flat, T_flat))) - a*np.sin(k_x*np.pi * x_ic)*np.sin(k_y*np.pi * y_ic)*np.exp(-(k_x**2 + k_y**2)*np.pi**2 * alpha *T_flat))}")
+    if epoch % 1000 == 0:
+        pass
+        #print(f"and secondloss {np.linalg.norm((model.predict(np.hstack((X_flat, Y_flat, T_flat))) - a*np.sin(k_x*np.pi * X_flat)*np.sin(k_y*np.pi * Y_flat)*np.exp(-(k_x**2 + k_y**2)*np.pi**2 * alpha *T_flat)).reshape(-1))}")
 # Visualize the results
 
 
@@ -131,10 +131,10 @@ U_pred = u_pred.reshape(n_x_t, n_y_t, n_t_t)
 
 print(np.linalg.norm(u_pred - a*np.sin(k_x*np.pi * x_ic)*np.sin(k_y*np.pi * y_ic)*np.exp(-(k_x**2 + k_y**2)*np.pi**2 * alpha *T_flat)) + \
 np.linalg.norm(a*np.sin(k_x*np.pi * x_ic)*np.sin(k_y*np.pi * y_ic)*np.exp(-(k_x**2 + k_y**2)*np.pi**2 * alpha *T_flat)))
+##print(np.linalg.norm((u_pred - a*np.sin(k_x*np.pi * X_flat)*np.sin(k_y*np.pi * Y_flat)*np.exp(-(k_x**2 + k_y**2)*np.pi**2 * alpha *T_flat)).reshape(-1)) / np.linalg.norm((a*np.sin(k_x*np.pi * X_flat)*np.sin(k_y*np.pi * Y_flat)*np.exp(-(k_x**2 + k_y**2)*np.pi**2 * alpha *T_flat)).reshape(-1)))
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.plot_surface(X[:,:,0], Y[:,:,0], U_pred[:,:,0], cmap="viridis", edgecolor="none")
-
 
 ax.set_xlabel("x")
 ax.set_ylabel("y")
@@ -142,12 +142,9 @@ ax.set_zlabel("f(x, y, t)")
 ax.set_zlim(-1, 1)
 
 def update(frame):
-    global surf
     surf.remove()  # Remove the old surface
     surf = ax.plot_surface(X[:,:,0], Y[:,:,0], U_pred[:,:,frame], cmap="viridis", edgecolor="none")
-    ax.set_title(f"Time: t = {frame/100.0:.2f}")
 
-anim = animation.FuncAnimation(fig, update, frames=100, interval=100)
 
 # Display the animation
 plt.show()
