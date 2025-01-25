@@ -3,7 +3,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 # Constant
-alpha = 0.2  
+alpha = 0.1 
 
 # Neural network 
 def create_model():
@@ -55,7 +55,7 @@ t_collocation = np.random.uniform(0, 1, (N_collocation, 1)).astype(np.float32)
 # Initial and boundary condition 
 x_ic = np.random.uniform(0, 1, (N_ic, 1)).astype(np.float32)
 t_ic = np.zeros((N_ic, 1), dtype=np.float32)
-u_ic = np.sin(np.pi * x_ic).astype(np.float32)
+u_ic = np.sin(2*np.pi * x_ic).astype(np.float32)
 
 
 t_bc = np.random.uniform(0, 1, (N_bc, 1)).astype(np.float32)
@@ -92,7 +92,7 @@ X_flat = X.flatten().reshape(-1, 1).astype(np.float32)
 T_flat = T.flatten().reshape(-1, 1).astype(np.float32)
 
 # Training
-epochs = 1000
+epochs = 2000
 for epoch in range(epochs):
     loss = train_step(x_collocation, t_collocation, x_ic, t_ic, u_ic, x_bc_0, x_bc_1, t_bc)
 
@@ -135,3 +135,50 @@ ax.set_title("Solution of the Heat Equation via PINN")
 plt.show()
 
 print(np.linalg.norm(u_pred - np.sin(np.pi*X_flat)*np.exp(-T_flat)))
+
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111)
+ax.set_title("Solution of the Heat Equation via PINN")
+ax.set_xlabel("x")
+ax.set_ylabel("u(x, t)")
+ax.set_ylim(-1, 1)
+line, = ax.plot(X[0, :], U_pred[0, :])
+
+def update(frame):
+    global line
+    line.set_ydata(U_pred[frame, :])
+    ax.set_title(f"Time: t = {frame*1.0/100:.2f}")
+
+
+import os
+os.makedirs("frames", exist_ok=True)
+
+# Generate and save frames
+for i in range(100): 
+    update(i)
+    plt.savefig(f"frames/frame_{i:03d}.png")  # Save as frame_000.png, frame_001.png, etc.
+
+from PIL import Image
+# Directory containing the frames
+frames_dir = "frames"
+
+# Output GIF filename
+output_gif = "animation_Gauss.gif"
+
+# Get all frame filenames sorted numerically
+frame_files = sorted(
+    [f for f in os.listdir(frames_dir) if f.endswith(".png")],
+    key=lambda x: int(x.split('_')[1].split('.')[0])
+)
+
+# Load frames into a list
+frames = [Image.open(os.path.join(frames_dir, frame)) for frame in frame_files]
+
+# Save as GIF
+frames[0].save(
+    output_gif,
+    save_all=True,
+    append_images=frames[1:],  # Add the rest of the frames
+    duration=100,  # Duration of each frame in milliseconds (e.g., 100ms = 10fps)
+    loop=0  # Loop forever (use 1 for no loop)
+)
