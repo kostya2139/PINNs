@@ -114,7 +114,7 @@ Y_flat = Y.flatten().reshape(-1, 1).astype(np.float32)
 T_flat = T.flatten().reshape(-1, 1).astype(np.float32)
 
 # Training loop
-epochs = 2000
+epochs = 3000
 for epoch in range(epochs):
     loss = train_step(x_collocation, y_collocation, t_collocation, x_ic, t_ic, u_ic, x_bc_0, y_bc_0, x_bc_1, y_bc_1, x_bc_2, y_bc_2, x_bc_3, y_bc_3, t_bc)
 
@@ -141,10 +141,13 @@ ax.set_zlabel("f(x, y, t)")
 ax.set_zlim(-1, 1)
 
 def update(frame):
-    global surf, n_t_t
+    global surf, n_t_t, cbar
+    cbar.remove()
+    
     surf.remove()  # Remove the old surface
     surf = ax.plot_surface(X[:,:,0], Y[:,:,0], U_pred[:,:,frame], cmap="viridis", edgecolor="none")
     ax.set_title(f"Time: t = {frame*1.0/n_t_t:.2f}")
+    cbar = fig.colorbar(surf, ax=ax, label="u(x, y, t)")
 
 import os
 os.makedirs("frames", exist_ok=True)
